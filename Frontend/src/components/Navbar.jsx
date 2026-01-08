@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,27 +20,28 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a
-              href="#"
+            <Link
+              to="/"
               className="text-gray-700 hover:text-primary transition-colors font-medium"
             >
               Home
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/about"
               className="text-gray-700 hover:text-primary transition-colors font-medium"
             >
               About
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/contact"
               className="text-gray-700 hover:text-primary transition-colors font-medium"
             >
               Contact
-            </a>
+            </Link>
 
             {/* Login/Register Icon */}
-            <button
+            <Link
+              to="/login"
               className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-orange-100 text-primary transition-colors"
               title="Login / Register"
             >
@@ -57,7 +59,7 @@ const Navbar = () => {
                   d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
                 />
               </svg>
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -98,27 +100,32 @@ const Navbar = () => {
       {isOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 absolute w-full left-0 top-16 shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 flex flex-col items-center">
-            <a
-              href="#"
+            <Link
+              to="/"
               className="block px-3 py-2 text-gray-700 hover:text-primary font-medium"
+              onClick={() => setIsOpen(false)}
             >
               Home
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/about"
               className="block px-3 py-2 text-gray-700 hover:text-primary font-medium"
+              onClick={() => setIsOpen(false)}
             >
               About
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/contact"
               className="block px-3 py-2 text-gray-700 hover:text-primary font-medium"
+              onClick={() => setIsOpen(false)}
             >
               Contact
-            </a>
-            <button
+            </Link>
+            <Link
+              to="/login"
               className="mt-2 flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-orange-100 text-primary transition-colors"
               title="Login / Register"
+              onClick={() => setIsOpen(false)}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -134,7 +141,7 @@ const Navbar = () => {
                   d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
                 />
               </svg>
-            </button>
+            </Link>
           </div>
         </div>
       )}

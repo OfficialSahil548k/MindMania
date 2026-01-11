@@ -1,7 +1,27 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import * as api from "../api/axios";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await api.signIn(formData);
+      localStorage.setItem("profile", JSON.stringify(data));
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.message || "Something went wrong");
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
@@ -13,7 +33,8 @@ const Login = () => {
             Please sign in to your account
           </p>
         </div>
-        <form className="mt-8 space-y-6" action="#" method="POST">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           <div>
             <button
               type="button"
@@ -69,6 +90,7 @@ const Login = () => {
                   required
                   className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-300"
                   placeholder="you@example.com"
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -89,6 +111,7 @@ const Login = () => {
                   required
                   className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-300"
                   placeholder="••••••••"
+                  onChange={handleChange}
                 />
               </div>
             </div>

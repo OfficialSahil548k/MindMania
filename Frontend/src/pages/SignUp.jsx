@@ -1,7 +1,32 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import * as api from "../api/axios";
 
 const SignUp = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "student",
+  });
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await api.signUp(formData);
+      localStorage.setItem("profile", JSON.stringify(data));
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.message || "Something went wrong");
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 py-12">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
@@ -11,7 +36,8 @@ const SignUp = () => {
           </h2>
           <p className="mt-2 text-sm text-gray-600">Join MindMania today</p>
         </div>
-        <form className="mt-8 space-y-6" action="#" method="POST">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           <div>
             <button
               type="button"
@@ -67,6 +93,7 @@ const SignUp = () => {
                   required
                   className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-300"
                   placeholder="Enter your full name"
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -87,6 +114,7 @@ const SignUp = () => {
                   required
                   className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-300"
                   placeholder="Enter your email"
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -103,6 +131,7 @@ const SignUp = () => {
                   id="role"
                   name="role"
                   className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-300 bg-white"
+                  onChange={handleChange}
                 >
                   <option value="student">Student / Candidate</option>
                   <option value="instructor">Instructor / Examiner</option>
@@ -136,6 +165,7 @@ const SignUp = () => {
                   required
                   className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm transition-all duration-300"
                   placeholder="••••••••"
+                  onChange={handleChange}
                 />
               </div>
             </div>

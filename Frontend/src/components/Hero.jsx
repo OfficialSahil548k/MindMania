@@ -1,5 +1,7 @@
 import React from "react";
 
+import { useNavigate } from "react-router-dom";
+
 const images = [
   "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=500&h=300&fit=crop&q=80", // Books/Library
   "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=500&h=300&fit=crop&q=80", // Laptop/Typing
@@ -10,6 +12,9 @@ const images = [
 ];
 
 const Hero = () => {
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("profile"));
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] bg-gray-50 overflow-hidden relative">
       <div className="text-center z-10 px-4 mb-15">
@@ -20,9 +25,14 @@ const Hero = () => {
           Join the ultimate quiz platform to test your knowledge, compete with
           friends, and learn something new every day.
         </p>
-        <button className="mt-8 px-8 py-3 bg-primary text-white rounded-full font-semibold shadow-lg hover:bg-orange-600 hover:shadow-xl transition-all transform hover:-translate-y-1">
-          Get Started
-        </button>
+        {!user && (
+          <button
+            onClick={() => navigate("/signup")}
+            className="mt-8 px-8 py-3 bg-primary text-white rounded-full font-semibold shadow-lg hover:bg-orange-600 hover:shadow-xl transition-all transform hover:-translate-y-1"
+          >
+            Get Started
+          </button>
+        )}
       </div>
 
       {/* Marquee Section */}

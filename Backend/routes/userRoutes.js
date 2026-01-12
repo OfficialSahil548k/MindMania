@@ -1,11 +1,9 @@
 import express from "express";
-// import auth from "../middleware/auth.js";
+import { getUserProfile } from "../controllers/userController.js";
+import auth from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Placeholder for user profile route
-router.get("/profile", (req, res) => {
-    res.send("User Profile");
-});
+router.get("/profile", auth, getUserProfile);
 
 export default router;

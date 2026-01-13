@@ -28,6 +28,14 @@ export const register = async (req, res) => {
             { expiresIn: "1h" }
         );
 
+        req.session.user = {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        };
+        req.session.isLoggedIn = true;
+
         res.status(201).json({ result: user, token });
     } catch (error) {
         res.status(500).json({ message: "Something went wrong" });
@@ -59,8 +67,25 @@ export const login = async (req, res) => {
             { expiresIn: "1h" }
         );
 
+        req.session.user = {
+            _id: existingUser._id,
+            name: existingUser.name,
+            email: existingUser.email,
+            role: existingUser.role,
+        };
+        req.session.isLoggedIn = true;
+
         res.status(200).json({ result: existingUser, token });
     } catch (error) {
         res.status(500).json({ message: "Something went wrong" });
     }
+};
+
+export const logout = (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ message: 'Could not log out, please try again' });
+        }
+        res.status(200).json({ message: 'Logout successful' });
+    });
 };

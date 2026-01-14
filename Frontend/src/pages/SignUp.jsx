@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import * as api from "../api/axios";
+import { useGoogleLogin } from "@react-oauth/google";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -27,6 +28,20 @@ const SignUp = () => {
     }
   };
 
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const { data } = await api.googleLogin(tokenResponse.access_token);
+        localStorage.setItem("profile", JSON.stringify(data));
+        navigate("/");
+      } catch (err) {
+        console.log(err);
+        setError("Google Sign Up was unsuccessful. Try again later");
+      }
+    },
+    onError: () => setError("Google Sign Up was unsuccessful. Try again later"),
+  });
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 py-12">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
@@ -41,6 +56,7 @@ const SignUp = () => {
           <div>
             <button
               type="button"
+              onClick={() => googleLogin()}
               className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-300"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">

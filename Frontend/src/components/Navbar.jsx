@@ -52,9 +52,9 @@ const Navbar = () => {
             {/* Auth Buttons */}
             {user ? (
               <div className="flex items-center gap-4">
-                {location.pathname !== "/profile" && (
+                {!location.pathname.startsWith("/profile") && (
                   <Link
-                    to="/profile"
+                    to={`/profile/${user?.result?._id}`}
                     className="flex items-center gap-2 transition-transform hover:scale-105"
                     title="Profile"
                   >
@@ -165,10 +165,11 @@ const Navbar = () => {
 
             {user ? (
               <>
-                {location.pathname !== "/profile" && (
+                {!location.pathname.startsWith("/profile") && (
                   <Link
-                    to="/profile"
+                    to={`/profile/${user?.result?._id}`}
                     className="flex items-center justify-center gap-2 px-3 py-2 text-gray-700 hover:text-primary font-medium w-full hover:bg-gray-50 rounded-lg"
+                    title="Profile"
                     onClick={() => setIsOpen(false)}
                   >
                     <div className="w-8 h-8 rounded-full border border-orange-200 overflow-hidden">

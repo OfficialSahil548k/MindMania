@@ -30,10 +30,10 @@ app.use(
     saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: CONNECTION_URL,
-      ttl: 7 * 24 * 60 * 60, // 7 days
+      ttl: 7 * 24 * 60 * 60,
     }),
     cookie: {
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -48,7 +48,7 @@ app.get("/", (req, res) => {
   res.send("Quiz API running...");
 });
 
-// Error Handling Middleware
+
 app.use(notFound);
 app.use(errorHandler);
 

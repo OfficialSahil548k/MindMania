@@ -1,7 +1,11 @@
-import React from "react";
+import { useParams } from "react-router-dom";
 
 const Profile = () => {
+  const { id } = useParams();
   const user = JSON.parse(localStorage.getItem("profile"));
+
+  // Robust check for user ID (considering both _id and googleId if applicable)
+  const currentUserId = user?.result?._id || user?.result?.googleId;
 
   if (!user) {
     return (
@@ -9,6 +13,23 @@ const Profile = () => {
         <p className="text-xl text-gray-600">
           Please log in to view your profile.
         </p>
+      </div>
+    );
+  }
+
+  // Check if viewing own profile
+  if (id && currentUserId && id !== currentUserId) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-64px)] bg-gray-50">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            Profile Not Found
+          </h2>
+          <p className="text-gray-600">
+            You do not have permission to view this profile or the user does not
+            exist.
+          </p>
+        </div>
       </div>
     );
   }

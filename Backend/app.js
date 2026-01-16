@@ -7,6 +7,8 @@ import MongoStore from "connect-mongo";
 
 import authRoutes from "./routes/authRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
+import questionRoutes from "./routes/questionRoutes.js";
+import attemptRoutes from "./routes/attemptRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
@@ -41,6 +43,8 @@ app.use(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/quiz", quizRoutes);
+app.use("/api/questions", questionRoutes);
+app.use("/api/attempts", attemptRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/user", userRoutes);
 

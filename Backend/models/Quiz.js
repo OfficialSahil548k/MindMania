@@ -8,13 +8,38 @@ const quizSchema = new mongoose.Schema({
     description: {
         type: String,
     },
+    category: {
+        type: String,
+        required: true,
+    },
     questions: [
         {
-            questionUser: { type: String, required: true },
-            options: [{ type: String, required: true }],
-            correctAnswer: { type: String, required: true },
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Question",
         },
     ],
+    timeLimit: {
+        type: Number, // In minutes
+        default: 10,
+    },
+    passingScore: {
+        type: Number, // Percentage
+        default: 50,
+    },
+    isPublished: {
+        type: Boolean,
+        default: false,
+    },
+    isLive: {
+        type: Boolean,
+        default: true,
+    },
+    startDate: {
+        type: Date,
+    },
+    endDate: {
+        type: Date,
+    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

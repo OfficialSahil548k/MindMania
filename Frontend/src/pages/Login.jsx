@@ -17,7 +17,17 @@ const Login = () => {
     try {
       const { data } = await api.signIn(formData);
       localStorage.setItem("profile", JSON.stringify(data));
-      navigate("/");
+      localStorage.setItem("profile", JSON.stringify(data));
+      // Redirect based on role and ID
+      if (
+        data?.result?.role === "instructor" ||
+        data?.result?.role === "admin"
+      ) {
+        navigate(`/${data.result._id}/dashboard`);
+      } else {
+        // Student or other
+        navigate("/quizzes");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
     }

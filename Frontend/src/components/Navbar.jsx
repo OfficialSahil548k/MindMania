@@ -36,6 +36,26 @@ const Navbar = () => {
             >
               Home
             </Link>
+            {user &&
+              user?.result?.role !== "instructor" &&
+              user?.result?.role !== "admin" && (
+                <Link
+                  to="/quizzes"
+                  className="text-gray-700 hover:text-primary transition-colors font-medium"
+                >
+                  Quizzes
+                </Link>
+              )}
+
+            {(user?.result?.role === "instructor" ||
+              user?.result?.role === "admin") && (
+              <Link
+                to={`/${user?.result?._id}/dashboard`}
+                className="text-gray-700 hover:text-primary transition-colors font-medium"
+              >
+                Dashboard
+              </Link>
+            )}
             <Link
               to="/about"
               className="text-gray-700 hover:text-primary transition-colors font-medium"
@@ -146,6 +166,28 @@ const Navbar = () => {
             >
               Home
             </Link>
+            {user &&
+              user?.result?.role !== "instructor" &&
+              user?.result?.role !== "admin" && (
+                <Link
+                  to="/quizzes"
+                  className="block px-3 py-2 text-gray-700 hover:text-primary font-medium w-full text-center hover:bg-gray-50 rounded-lg"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Quizzes
+                </Link>
+              )}
+
+            {(user?.result?.role === "instructor" ||
+              user?.result?.role === "admin") && (
+              <Link
+                to={`/${user?.result?._id}/dashboard`}
+                className="block px-3 py-2 text-gray-700 hover:text-primary font-medium w-full text-center hover:bg-gray-50 rounded-lg"
+                onClick={() => setIsOpen(false)}
+              >
+                Dashboard
+              </Link>
+            )}
             <Link
               to="/about"
               className="block px-3 py-2 text-gray-700 hover:text-primary font-medium w-full text-center hover:bg-gray-50 rounded-lg"

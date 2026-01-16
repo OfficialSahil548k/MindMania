@@ -73,6 +73,14 @@ const Profile = () => {
                   {user?.result?.email}
                 </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500">
+                  Role
+                </label>
+                <div className="mt-1 text-lg text-gray-900 capitalize">
+                  {user?.result?.role || "Student"}
+                </div>
+              </div>
             </div>
           </div>
 

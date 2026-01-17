@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchQuiz, submitAttempt } from "../api/axios";
+import { fetchQuiz, submitAttempt, startAttempt } from "../api/axios";
 import Loader from "../components/Loader";
 import Button from "../components/Button";
+import { useToast } from "../context/ToastContext";
 
 const QuizPlayer = () => {
   const { id } = useParams();
@@ -14,6 +15,7 @@ const QuizPlayer = () => {
   const [timeLeft, setTimeLeft] = useState(0); // in seconds
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
   // Warn before unload (refresh/close)
   useEffect(() => {
@@ -34,13 +36,23 @@ const QuizPlayer = () => {
         setTimeLeft(data.timeLimit * 60);
       } catch (error) {
         console.error("Error loading quiz:", error);
-        alert("Failed to load quiz or it might be invalid.");
+        toast.error("Failed to load quiz or it might be invalid.");
         navigate("/quizzes");
       } finally {
         setLoading(false);
       }
     };
     loadQuiz();
+
+    // Start Attempt Logic
+    const initAttempt = async () => {
+      try {
+        await startAttempt({ quizId: id });
+      } catch (error) {
+        console.error("Failed to start attempt:", error);
+      }
+    };
+    if (id) initAttempt();
   }, [id, navigate]);
 
   // Timer Logic
@@ -65,11 +77,10 @@ const QuizPlayer = () => {
   };
 
   const handleSubmit = async (autoSubmit = false) => {
-    if (
-      !autoSubmit &&
-      !window.confirm("Are you sure you want to submit your quiz?")
-    )
+    if (!autoSubmit) {
+      setIsSubmitModalOpen(true);
       return;
+    }
 
     setSubmitting(true);
     // Format answers for backend
@@ -87,7 +98,7 @@ const QuizPlayer = () => {
       navigate(`/result/${id}`, { state: { result: data.result, quiz } });
     } catch (error) {
       console.error("Submission failed:", error);
-      alert(
+      toast.error(
         error.response?.data?.message ||
           "Failed to submit quiz. Please try again."
       );
@@ -224,6 +235,37 @@ const QuizPlayer = () => {
           </div>
         </div>
       </main>
+
+      {/* Submission Modal */}
+      {isSubmitModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Submit Quiz?
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to submit? You won't be able to change your
+              answers after this.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => setIsSubmitModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsSubmitModalOpen(false);
+                  handleSubmit(true); // Proceed with execution
+                }}
+              >
+                Yes, Submit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

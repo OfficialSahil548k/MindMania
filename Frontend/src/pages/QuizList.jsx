@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { fetchQuizzes } from "../api/axios";
+import { fetchQuizzes, fetchUserAttempts } from "../api/axios";
 import Loader from "../components/Loader";
 import Button from "../components/Button";
 
@@ -8,21 +8,34 @@ const QuizList = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
+  const [attempts, setAttempts] = useState({}); // { quizId: status }
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadQuizzes = async () => {
+    const fetchData = async () => {
       try {
-        // In a real app, we might pass the filter to the backend API
-        const { data } = await fetchQuizzes();
-        setQuizzes(data);
+        const [quizzesRes, attemptsRes] = await Promise.all([
+          fetchQuizzes(),
+          fetchUserAttempts().catch(() => ({ data: [] })), // Handle case if user not logged in or error
+        ]);
+
+        setQuizzes(quizzesRes.data);
+
+        // Map attempts to quizId: status
+        const attemptsMap = {};
+        if (attemptsRes?.data) {
+          attemptsRes.data.forEach((attempt) => {
+            attemptsMap[attempt.quiz._id || attempt.quiz] = attempt.status;
+          });
+        }
+        setAttempts(attemptsMap);
       } catch (error) {
         console.error("Error fetching quizzes:", error);
       } finally {
         setLoading(false);
       }
     };
-    loadQuizzes();
+    fetchData();
   }, []);
 
   const categories = ["All", ...new Set(quizzes.map((q) => q.category))];
@@ -55,16 +68,21 @@ const QuizList = () => {
         </div>
 
         {/* Helper for Instructors */}
-        {(JSON.parse(localStorage.getItem("profile"))?.result?.role ===
-          "instructor" ||
-          JSON.parse(localStorage.getItem("profile"))?.result?.role ===
-            "admin") && (
-          <div className="flex justify-end mb-6">
-            <Link to="/instructor-dashboard">
-              <Button variant="outline">Manage Quizzes (Dashboard)</Button>
-            </Link>
-          </div>
-        )}
+        {(() => {
+          const user = JSON.parse(localStorage.getItem("profile"));
+          const role = user?.result?.role;
+          const userId = user?.result?._id;
+
+          if (role === "instructor" || role === "admin") {
+            return (
+              <div className="flex justify-center mb-6">
+                <Link to={`/${userId}/dashboard`}>
+                  <Button variant="outline">Manage Quizzes (Dashboard)</Button>
+                </Link>
+              </div>
+            );
+          }
+        })()}
 
         {/* Category Filter */}
         <div className="flex flex-wrap justify-center gap-2 mb-10">
@@ -95,8 +113,22 @@ const QuizList = () => {
             filteredQuizzes.map((quiz) => (
               <div
                 key={quiz._id}
-                className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow overflow-hidden border border-gray-100 flex flex-col"
+                className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow overflow-hidden border border-gray-100 flex flex-col relative"
               >
+                {/* Status Badge */}
+                {attempts[quiz._id] && (
+                  <div
+                    className={`absolute top-0 right-0 px-3 py-1 text-xs font-bold rounded-bl-xl z-10 ${
+                      attempts[quiz._id] === "completed"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {attempts[quiz._id] === "completed"
+                      ? "Completed"
+                      : "Pending"}
+                  </div>
+                )}
                 <div className="p-6 flex-grow">
                   <div className="flex justify-between items-start mb-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -156,12 +188,33 @@ const QuizList = () => {
                   </div>
                 </div>
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                  <Button
-                    onClick={() => handleStartQuiz(quiz._id)}
-                    className="w-full justify-center"
-                  >
-                    Start Quiz
-                  </Button>
+                  {(() => {
+                    const user = JSON.parse(localStorage.getItem("profile"));
+                    const role = user?.result?.role;
+                    if (role !== "instructor" && role !== "admin") {
+                      return (
+                        <Button
+                          onClick={() => handleStartQuiz(quiz._id)}
+                          className="w-full justify-center"
+                        >
+                          Start Quiz
+                        </Button>
+                      );
+                    }
+                    return (
+                      <Link
+                        to={`/edit-quiz/${quiz._id}`}
+                        className="block w-full"
+                      >
+                        <Button
+                          variant="outline"
+                          className="w-full justify-center"
+                        >
+                          View Detail
+                        </Button>
+                      </Link>
+                    );
+                  })()}
                 </div>
               </div>
             ))

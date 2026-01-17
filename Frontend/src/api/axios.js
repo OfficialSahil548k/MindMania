@@ -33,6 +33,7 @@ export const updateQuiz = (id, updatedQuiz) => API.patch(`/api/quiz/${id}`, upda
 export const deleteQuiz = (id) => API.delete(`/api/quiz/${id}`);
 
 // Attempts
+export const startAttempt = (data) => API.post("/api/attempts/start", data);
 export const submitAttempt = (attemptData) => API.post("/api/attempts", attemptData);
 export const fetchAttempt = (id) => API.get(`/api/attempts/${id}`);
 export const fetchUserAttempts = () => API.get("/api/attempts/user");

@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { fetchQuestions, createQuiz, createQuestion } from "../api/axios";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  fetchQuestions,
+  fetchQuiz,
+  updateQuiz,
+  createQuestion,
+} from "../api/axios";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import Loader from "../components/Loader";
 import { useToast } from "../context/ToastContext";
 
-const CreateQuiz = () => {
+const EditQuiz = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const toast = useToast();
+  const [loading, setLoading] = useState(true);
   const [availableQuestions, setAvailableQuestions] = useState([]);
 
   // Modal State
@@ -34,18 +40,36 @@ const CreateQuiz = () => {
   });
 
   useEffect(() => {
-    const loadQuestions = async () => {
+    const fetchData = async () => {
       try {
-        const { data } = await fetchQuestions();
-        setAvailableQuestions(data);
+        const [quizRes, questionsRes] = await Promise.all([
+          fetchQuiz(id),
+          fetchQuestions(),
+        ]);
+
+        const quiz = quizRes.data;
+        // Map backend data to form state
+        setQuizData({
+          title: quiz.title,
+          description: quiz.description,
+          category: quiz.category,
+          timeLimit: quiz.timeLimit,
+          passingScore: quiz.passingScore,
+          isLive: quiz.isPublished || quiz.isLive, // Handle both flags
+          questions: quiz.questions.map((q) => q._id || q), // Handle populated or unpopulated
+        });
+
+        setAvailableQuestions(questionsRes.data);
       } catch (error) {
-        console.error("Error loading questions", error);
+        console.error("Error loading data", error);
+        toast.error("Failed to load quiz data.");
+        navigate("/quizzes");
       } finally {
-        setInitialLoading(false);
+        setLoading(false);
       }
     };
-    loadQuestions();
-  }, []);
+    fetchData();
+  }, [id, navigate]);
 
   const handleChange = (e) => {
     const value =
@@ -55,25 +79,14 @@ const CreateQuiz = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (step === 1) {
-      setStep(2);
-      return;
-    }
-
     try {
-      const user = JSON.parse(localStorage.getItem("profile"));
-      const userId = user?.result?._id;
-
-      await createQuiz({ ...quizData, isPublished: quizData.isLive });
-
-      if (userId) {
-        navigate(`/${userId}/dashboard`);
-      } else {
-        navigate("/instructor-dashboard");
-      }
+      // Map isLive back to isPublished
+      await updateQuiz(id, { ...quizData, isPublished: quizData.isLive });
+      toast.success("Quiz updated successfully!");
+      navigate(`/quizzes`); // Or back to dashboard
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create quiz");
+      toast.error("Failed to update quiz");
     }
   };
 
@@ -104,14 +117,12 @@ const CreateQuiz = () => {
     e.preventDefault();
     try {
       const { data } = await createQuestion(newQuestion);
-      // Add new question to list and auto-select
       setAvailableQuestions([...availableQuestions, data]);
       setQuizData({
         ...quizData,
         questions: [...quizData.questions, data._id],
       });
       setIsQuestionModalOpen(false);
-      // Reset form
       setNewQuestion({
         text: "",
         type: "MCQ",
@@ -125,126 +136,111 @@ const CreateQuiz = () => {
     }
   };
 
-  if (initialLoading) return <Loader />;
+  if (loading) return <Loader />;
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-gray-50 py-12 px-4">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden relative">
         <div className="p-8">
-          <div className="mb-8">
-            <div className="flex items-center gap-4 text-sm font-medium text-gray-500 mb-4">
-              <span className={step === 1 ? "text-primary" : ""}>
-                1. Quiz Details
-              </span>
-              <span>&rarr;</span>
-              <span className={step === 2 ? "text-primary" : ""}>
-                2. Select Questions
-              </span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Create New Quiz
-            </h1>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">Edit Quiz</h1>
+            <Button variant="secondary" onClick={() => navigate("/quizzes")}>
+              Cancel
+            </Button>
           </div>
 
           <form onSubmit={handleSubmit}>
-            {step === 1 && (
-              <div className="space-y-6">
+            <div className="space-y-6">
+              <Input
+                label="Quiz Title"
+                name="title"
+                value={quizData.title}
+                onChange={handleChange}
+                required
+                placeholder="e.g. Introduction to React"
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
+                  value={quizData.description}
+                  onChange={handleChange}
+                ></textarea>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  label="Quiz Title"
-                  name="title"
-                  value={quizData.title}
+                  label="Category"
+                  name="category"
+                  value={quizData.category}
                   onChange={handleChange}
                   required
-                  placeholder="e.g. Introduction to React"
+                  placeholder="e.g. Web Development"
                 />
+                <Input
+                  label="Time Limit (Minutes)"
+                  type="number"
+                  name="timeLimit"
+                  value={quizData.timeLimit}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  label="Passing Score (%)"
+                  type="number"
+                  name="passingScore"
+                  value={quizData.passingScore}
+                  onChange={handleChange}
+                  required
+                />
+                <div className="flex items-center h-full pt-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="isLive"
+                      checked={quizData.isLive}
+                      onChange={handleChange}
+                      className="w-5 h-5 text-primary rounded focus:ring-primary"
+                    />
+                    <span className="text-gray-900 font-medium">
+                      Publish Immediately (Live)
+                    </span>
                   </label>
-                  <textarea
-                    name="description"
-                    rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary"
-                    value={quizData.description}
-                    onChange={handleChange}
-                  ></textarea>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Input
-                    label="Category"
-                    name="category"
-                    value={quizData.category}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g. Web Development"
-                  />
-                  <Input
-                    label="Time Limit (Minutes)"
-                    type="number"
-                    name="timeLimit"
-                    value={quizData.timeLimit}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Input
-                    label="Passing Score (%)"
-                    type="number"
-                    name="passingScore"
-                    value={quizData.passingScore}
-                    onChange={handleChange}
-                    required
-                  />
-                  <div className="flex items-center h-full pt-6">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="isLive"
-                        checked={quizData.isLive}
-                        onChange={handleChange}
-                        className="w-5 h-5 text-primary rounded focus:ring-primary"
-                      />
-                      <span className="text-gray-900 font-medium">
-                        Publish Immediately (Live)
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-6">
-                  <Button type="submit">Next: Select Questions</Button>
                 </div>
               </div>
-            )}
 
-            {step === 2 && (
-              <div className="space-y-6">
+              <div className="border-t pt-6 mt-6">
                 <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Select Questions from Bank
-                    </h3>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Questions
+                  </h3>
+                  <div className="flex items-center gap-4">
                     <span className="text-sm text-gray-500">
-                      Selected: {quizData.questions.length}
+                      Selected: {quizData.questions.length} /{" "}
+                      {availableQuestions.length}
                     </span>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setIsQuestionModalOpen(true)}
+                    >
+                      + New Question
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setIsQuestionModalOpen(true)}
-                  >
-                    + New Question
-                  </Button>
                 </div>
 
-                <div className="border rounded-lg divide-y max-h-[500px] overflow-y-auto">
+                <div className="border rounded-lg divide-y max-h-[400px] overflow-y-auto">
                   {availableQuestions.length === 0 ? (
                     <div className="p-8 text-center text-gray-500">
-                      No questions available. Add from bank or create new.
+                      No questions available.
                     </div>
                   ) : (
                     availableQuestions.map((q) => (
@@ -273,28 +269,16 @@ const CreateQuiz = () => {
                     ))
                   )}
                 </div>
-
-                <div className="flex justify-between pt-6">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setStep(1)}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={quizData.questions.length === 0}
-                  >
-                    Create Quiz
-                  </Button>
-                </div>
               </div>
-            )}
+
+              <div className="flex justify-end pt-6">
+                <Button type="submit">Save Changes</Button>
+              </div>
+            </div>
           </form>
         </div>
 
-        {/* Question Creation Modal */}
+        {/* Reuse the Question Modal from CreateQuiz (copied here for simplicity) */}
         {isQuestionModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-y-auto max-h-[90vh]">
@@ -432,4 +416,4 @@ const CreateQuiz = () => {
   );
 };
 
-export default CreateQuiz;
+export default EditQuiz;

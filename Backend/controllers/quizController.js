@@ -55,11 +55,19 @@ export const updateQuiz = async (req, res) => {
     const { id: _id } = req.params;
     const quiz = req.body;
 
+    console.log(`Updating Quiz ${_id} with data:`, quiz);
+
     if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(404).send('No quiz with that id');
 
-    const updatedQuiz = await Quiz.findByIdAndUpdate(_id, { ...quiz, _id }, { new: true });
+    const { _id: idToRemove, ...quizUpdates } = quiz;
 
-    res.json(updatedQuiz);
+    try {
+        const updatedQuiz = await Quiz.findByIdAndUpdate(_id, quizUpdates, { new: true });
+        res.json(updatedQuiz);
+    } catch (error) {
+        console.error("Update Quiz Error:", error);
+        res.status(400).json({ message: error.message });
+    }
 }
 
 export const deleteQuiz = async (req, res) => {

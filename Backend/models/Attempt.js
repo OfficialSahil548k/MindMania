@@ -24,7 +24,12 @@ const attemptSchema = new mongoose.Schema({
     }],
     score: {
         type: Number,
-        required: true,
+        default: 0,
+    },
+    status: {
+        type: String,
+        enum: ["pending", "completed"],
+        default: "pending",
     },
     passed: {
         type: Boolean,

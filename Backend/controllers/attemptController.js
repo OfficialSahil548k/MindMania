@@ -2,6 +2,40 @@ import Attempt from "../models/Attempt.js";
 import Quiz from "../models/Quiz.js";
 import Question from "../models/Question.js";
 
+export const startAttempt = async (req, res) => {
+    const { quizId } = req.body;
+    const userId = req.userId;
+
+    try {
+        const quiz = await Quiz.findById(quizId);
+        if (!quiz) return res.status(404).json({ message: "Quiz not found" });
+
+        // Check for existing attempt
+        const existingAttempt = await Attempt.findOne({ quiz: quizId, user: userId });
+
+        if (existingAttempt) {
+            if (existingAttempt.status === "completed") {
+                return res.status(400).json({ message: "You have already completed this quiz." });
+            }
+            // If pending, just return it (resuming)
+            return res.status(200).json(existingAttempt);
+        }
+
+        // Create new pending attempt
+        const newAttempt = new Attempt({
+            quiz: quizId,
+            user: userId,
+            status: "pending",
+        });
+
+        await newAttempt.save();
+        res.status(201).json(newAttempt);
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const submitAttempt = async (req, res) => {
     const { quizId, answers } = req.body;
     const userId = req.userId;
@@ -11,10 +45,15 @@ export const submitAttempt = async (req, res) => {
         const quiz = await Quiz.findById(quizId);
         if (!quiz) return res.status(404).json({ message: "Quiz not found" });
 
-        // 2. Check for existing attempt (Single Attempt Rule)
-        const existingAttempt = await Attempt.findOne({ quiz: quizId, user: userId });
-        if (existingAttempt) {
-            return res.status(400).json({ message: "You have already attempted this quiz." });
+        // 2. Find Pending Attempt
+        const attempt = await Attempt.findOne({ quiz: quizId, user: userId });
+
+        // If no attempt exists or it's already completed
+        if (!attempt) {
+            return res.status(404).json({ message: "No active attempt found. Please start the quiz first." });
+        }
+        if (attempt.status === "completed") {
+            return res.status(400).json({ message: "You have already submitted this quiz." });
         }
 
         // 3. Fetch Questions to calculate score
@@ -44,24 +83,21 @@ export const submitAttempt = async (req, res) => {
         const scorePercentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
         const passed = scorePercentage >= quiz.passingScore;
 
-        // 5. Save Attempt
-        const newAttempt = new Attempt({
-            quiz: quizId,
-            user: userId,
-            answers: processedAnswers,
-            score, // Storing raw score (number of correct answers)
-            passed,
-            completedAt: new Date().toISOString()
-        });
+        // 5. Update Attempt
+        attempt.answers = processedAnswers;
+        attempt.score = score;
+        attempt.passed = passed;
+        attempt.status = "completed";
+        attempt.completedAt = new Date().toISOString();
 
-        await newAttempt.save();
+        await attempt.save();
 
         // 6. Return Result
         // Logic for hiding correct answers if quiz is live is handled on Frontend or separate "Review" endpoint.
         // But the user asked: "Correct Answers only visible at end of the quiz and only if quiz is not live."
         // We can return the score immediately.
 
-        res.status(201).json({
+        res.status(200).json({
             message: "Quiz submitted successfully",
             result: {
                 score,

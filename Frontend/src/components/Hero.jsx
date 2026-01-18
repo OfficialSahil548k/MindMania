@@ -27,7 +27,7 @@ const Hero = () => {
         </p>
         {!user && (
           <button
-            onClick={() => navigate("/signup")}
+            onClick={() => navigate("/login")}
             className="mt-8 px-8 py-3 bg-primary text-white rounded-full font-semibold shadow-lg hover:bg-orange-600 hover:shadow-xl transition-all transform hover:-translate-y-1"
           >
             Get Started

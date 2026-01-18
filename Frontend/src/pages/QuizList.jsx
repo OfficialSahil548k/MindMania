@@ -8,8 +8,11 @@ const QuizList = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [attempts, setAttempts] = useState({}); // { quizId: status }
   const navigate = useNavigate();
+
+  /* ... useEffect ... */
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,10 +43,16 @@ const QuizList = () => {
 
   const categories = ["All", ...new Set(quizzes.map((q) => q.category))];
 
-  const filteredQuizzes =
-    filter === "All" ? quizzes : quizzes.filter((q) => q.category === filter);
+  const filteredQuizzes = quizzes.filter((q) => {
+    const matchesCategory = filter === "All" || q.category === filter;
+    const matchesSearch =
+      q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      q.category.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const handleStartQuiz = (quizId) => {
+    /* ... existing handleStartQuiz ... */
     const user = JSON.parse(localStorage.getItem("profile"));
     if (!user) {
       alert("Please log in to start a quiz.");
@@ -67,22 +76,48 @@ const QuizList = () => {
           </p>
         </div>
 
-        {/* Helper for Instructors */}
-        {(() => {
-          const user = JSON.parse(localStorage.getItem("profile"));
-          const role = user?.result?.role;
-          const userId = user?.result?._id;
+        {/* Search & Manage Actions */}
+        <div className="max-w-4xl mx-auto mb-10 flex flex-col md:flex-row gap-4 items-center">
+          <div className="relative flex-grow w-full">
+            <input
+              type="text"
+              placeholder="Search subjects, topics..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-3 pl-12 rounded-full border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow shadow-sm"
+            />
+            <svg
+              className="absolute left-4 top-3.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
 
-          if (role === "instructor" || role === "admin") {
-            return (
-              <div className="flex justify-center mb-6">
-                <Link to={`/${userId}/dashboard`}>
-                  <Button variant="outline">Manage Quizzes (Dashboard)</Button>
+          {/* Instructor Action */}
+          {(() => {
+            const user = JSON.parse(localStorage.getItem("profile"));
+            const role = user?.result?.role;
+            const userId = user?.result?._id;
+
+            if (role === "instructor" || role === "admin") {
+              return (
+                <Link to={`/${userId}/dashboard`} className="flex-shrink-0">
+                  <Button variant="outline" className="whitespace-nowrap">
+                    Manage Quizzes
+                  </Button>
                 </Link>
-              </div>
-            );
-          }
-        })()}
+              );
+            }
+          })()}
+        </div>
 
         {/* Category Filter */}
         <div className="flex flex-wrap justify-center gap-2 mb-10">

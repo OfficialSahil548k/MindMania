@@ -11,14 +11,27 @@ import Button from "../components/Button";
 import Input from "../components/Input";
 import Loader from "../components/Loader";
 
+import { useToast } from "../context/ToastContext";
+import ConfirmationModal from "../components/ConfirmationModal";
+
 const InstructorDashboard = () => {
+  /* ... existing state */
   const { userId } = useParams();
   const [quizzes, setQuizzes] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("quizzes"); // quizzes or questions
+  const [activeTab, setActiveTab] = useState("quizzes");
+  const toast = useToast();
 
-  // Modal State
+  const [confirmation, setConfirmation] = useState({
+    isOpen: false,
+    type: null, // "quiz" or "question"
+    id: null,
+    title: "",
+    message: "",
+  });
+
+  /* ... Modal State & loadData ... */
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [newQuestion, setNewQuestion] = useState({
     text: "",
@@ -29,6 +42,7 @@ const InstructorDashboard = () => {
   });
 
   const loadData = async () => {
+    /* ... same loadData logic ... */
     setLoading(true);
     try {
       const quizzesRes = await fetchQuizzes({ owner: true });
@@ -37,6 +51,7 @@ const InstructorDashboard = () => {
       setQuestions(questionsRes.data);
     } catch (error) {
       console.error("Error loading dashboard data:", error);
+      toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
@@ -46,29 +61,46 @@ const InstructorDashboard = () => {
     loadData();
   }, []);
 
-  const handleDeleteQuiz = async (id) => {
-    if (window.confirm("Are you sure you want to delete this quiz?")) {
+  const openDeleteModal = (type, id) => {
+    const title = type === "quiz" ? "Delete Quiz" : "Delete Question";
+    const message =
+      type === "quiz"
+        ? "Are you sure you want to delete this quiz? This action cannot be undone."
+        : "Are you sure you want to delete this question? This action cannot be undone.";
+
+    setConfirmation({ isOpen: true, type, id, title, message });
+  };
+
+  const closeDeleteModal = () => {
+    setConfirmation({ ...confirmation, isOpen: false });
+  };
+
+  const handleConfirmDelete = async () => {
+    const { type, id } = confirmation;
+    closeDeleteModal();
+
+    if (type === "quiz") {
       try {
         await deleteQuiz(id);
         setQuizzes(quizzes.filter((q) => q._id !== id));
+        toast.success("Quiz deleted successfully");
       } catch (error) {
         console.error("Error deleting quiz:", error);
+        toast.error("Failed to delete quiz");
       }
-    }
-  };
-
-  const handleDeleteQuestion = async (id) => {
-    if (window.confirm("Are you sure you want to delete this question?")) {
+    } else if (type === "question") {
       try {
         await deleteQuestion(id);
         setQuestions(questions.filter((q) => q._id !== id));
+        toast.success("Question deleted successfully");
       } catch (error) {
         console.error("Error deleting question:", error);
+        toast.error("Failed to delete question");
       }
     }
   };
 
-  // New Question Logic
+  /* ... existing handle/create question logic ... */
   const handleNewQuestionChange = (e) => {
     setNewQuestion({ ...newQuestion, [e.target.name]: e.target.value });
   };
@@ -83,10 +115,8 @@ const InstructorDashboard = () => {
     e.preventDefault();
     try {
       const { data } = await createQuestion(newQuestion);
-      // Add new question to list
       setQuestions([...questions, data]);
       setIsQuestionModalOpen(false);
-      // Reset form
       setNewQuestion({
         text: "",
         type: "MCQ",
@@ -94,9 +124,10 @@ const InstructorDashboard = () => {
         correctAnswer: "",
         difficulty: "Medium",
       });
+      toast.success("Question added successfully");
     } catch (error) {
       console.error("Failed to create question", error);
-      alert("Failed to create question. Please check all fields.");
+      toast.error("Failed to create question");
     }
   };
 
@@ -182,7 +213,7 @@ const InstructorDashboard = () => {
                         {/* Edit button placeholder */}
                         <Button
                           variant="danger"
-                          onClick={() => handleDeleteQuiz(quiz._id)}
+                          onClick={() => openDeleteModal("quiz", quiz._id)}
                           className="text-sm px-3 py-1"
                         >
                           Delete
@@ -218,8 +249,8 @@ const InstructorDashboard = () => {
                                 question.difficulty === "Easy"
                                   ? "bg-green-100 text-green-800"
                                   : question.difficulty === "Medium"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-red-100 text-red-800"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-red-100 text-red-800"
                               }`}
                             >
                               {question.difficulty}
@@ -228,7 +259,9 @@ const InstructorDashboard = () => {
                         </div>
                         <Button
                           variant="danger"
-                          onClick={() => handleDeleteQuestion(question._id)}
+                          onClick={() =>
+                            openDeleteModal("question", question._id)
+                          }
                           className="text-sm px-2 py-1"
                         >
                           Delete
@@ -241,6 +274,15 @@ const InstructorDashboard = () => {
             )}
           </div>
         </div>
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={confirmation.isOpen}
+          onClose={closeDeleteModal}
+          onConfirm={handleConfirmDelete}
+          title={confirmation.title}
+          message={confirmation.message}
+        />
 
         {/* Question Creation Modal */}
         {isQuestionModalOpen && (
@@ -343,7 +385,7 @@ const InstructorDashboard = () => {
                             <option key={idx} value={opt}>
                               {opt}
                             </option>
-                          )
+                          ),
                       )}
                     </select>
                   ) : (

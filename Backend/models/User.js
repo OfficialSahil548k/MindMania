@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema({
         enum: ["student", "instructor", "admin"],
         default: "student",
     },
+    profileImage: {
+        type: String,
+        default: "",
+    },
     createdAt: {
         type: Date,
         default: Date.now,

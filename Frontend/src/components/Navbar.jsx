@@ -80,9 +80,12 @@ const Navbar = () => {
                   >
                     <div className="w-10 h-10 rounded-full border-2 border-orange-200 overflow-hidden shadow-sm hover:shadow-md hover:border-orange-400 transition-all">
                       <img
-                        src={`https://api.dicebear.com/9.x/micah/svg?seed=${
-                          user?.result?.name || "User"
-                        }`}
+                        src={
+                          user?.result?.profileImage ||
+                          `https://api.dicebear.com/9.x/micah/svg?seed=${
+                            user?.result?.name || "User"
+                          }`
+                        }
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />
@@ -216,9 +219,12 @@ const Navbar = () => {
                   >
                     <div className="w-8 h-8 rounded-full border border-orange-200 overflow-hidden">
                       <img
-                        src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${
-                          user?.result?.name || "User"
-                        }`}
+                        src={
+                          user?.result?.profileImage ||
+                          `https://api.dicebear.com/9.x/avataaars/svg?seed=${
+                            user?.result?.name || "User"
+                          }`
+                        }
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />

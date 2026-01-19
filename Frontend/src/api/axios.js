@@ -40,3 +40,7 @@ export const fetchUserAttempts = () => API.get("/api/attempts/user");
 
 // Contact
 export const submitContact = (contactData) => API.post("/api/contact", contactData);
+
+// User
+export const uploadProfileImage = (formData) => API.post("/api/user/profile-image", formData);
+export const fetchUserProfile = () => API.get("/api/user/profile");

@@ -1,11 +1,47 @@
-import { useParams } from "react-router-dom";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom"; // Added useNavigate if needed, but maybe not essential
+import { uploadProfileImage } from "../api/axios";
 
 const Profile = () => {
   const { id } = useParams();
-  const user = JSON.parse(localStorage.getItem("profile"));
+  // Initialize state from localStorage, but allow updates
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("profile")));
+  const [uploading, setUploading] = useState(false);
 
   // Robust check for user ID (considering both _id and googleId if applicable)
   const currentUserId = user?.result?._id || user?.result?.googleId;
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size too large. Please select an image under 5MB.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("profileImage", file);
+
+    setUploading(true);
+    try {
+      const { data } = await uploadProfileImage(formData);
+
+      const updatedUser = { ...user, result: data.result };
+      setUser(updatedUser);
+      localStorage.setItem("profile", JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error(error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to upload image.";
+      alert(`Upload failed: ${errorMessage}`);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -40,14 +76,57 @@ const Profile = () => {
         <div className="bg-primary px-6 py-8 sm:px-10">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-white">My Profile</h1>
-            <div className="h-20 w-20 rounded-full bg-white border-4 border-orange-200 overflow-hidden shadow-md">
-              <img
-                src={`https://api.dicebear.com/9.x/micah/svg?seed=${
-                  user?.result?.name || "User"
-                }`}
-                alt="Profile"
-                className="w-full h-full object-cover"
+            <div className="relative h-20 w-20">
+              <div className="h-full w-full rounded-full bg-white border-4 border-orange-200 overflow-hidden shadow-md">
+                <img
+                  src={
+                    user?.result?.profileImage ||
+                    `https://api.dicebear.com/9.x/micah/svg?seed=${
+                      user?.result?.name || "User"
+                    }`
+                  }
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <label
+                htmlFor="profile-image-upload"
+                className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-lg cursor-pointer hover:bg-gray-100 transition-colors border border-gray-200"
+                title="Update Profile Picture"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-4 h-4 text-gray-600"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
+                  />
+                </svg>
+              </label>
+              <input
+                type="file"
+                id="profile-image-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploading}
               />
+              {uploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                </div>
+              )}
             </div>
           </div>
         </div>

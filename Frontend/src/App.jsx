@@ -14,14 +14,21 @@ const Contact = React.lazy(() => import("./pages/Contact"));
 const Profile = React.lazy(() => import("./pages/Profile"));
 
 const InstructorDashboard = React.lazy(
-  () => import("./pages/InstructorDashboard")
+  () => import("./pages/InstructorDashboard"),
 );
 const CreateQuestion = React.lazy(() => import("./pages/CreateQuestion"));
 const CreateQuiz = React.lazy(() => import("./pages/CreateQuiz"));
 const EditQuiz = React.lazy(() => import("./pages/EditQuiz"));
 const QuizList = React.lazy(() => import("./pages/QuizList"));
 const QuizPlayer = React.lazy(() => import("./pages/QuizPlayer"));
+const InstituteSelection = React.lazy(
+  () => import("./pages/InstituteSelection"),
+);
+const InstituteQuizList = React.lazy(() => import("./pages/InstituteQuizList"));
 const Result = React.lazy(() => import("./pages/Result"));
+const InstituteManagement = React.lazy(
+  () => import("./pages/admin/InstituteManagement"),
+);
 
 function App() {
   return (
@@ -51,11 +58,20 @@ function App() {
                 <Route path="/quizzes" element={<QuizList />} />
                 <Route path="/quiz/:id" element={<QuizPlayer />} />
                 <Route path="/result/:id" element={<Result />} />
+                <Route path="/institutes" element={<InstituteSelection />} />
+                <Route
+                  path="/institutes/:instituteId/quizzes"
+                  element={<InstituteQuizList />}
+                />
 
                 {/* Instructor Routes with Dynamic User ID */}
                 <Route
                   path="/:userId/dashboard"
                   element={<InstructorDashboard />}
+                />
+                <Route
+                  path="/:userId/institutes"
+                  element={<InstituteManagement />}
                 />
                 <Route path="/:userId/create-quiz" element={<CreateQuiz />} />
                 <Route path="/edit-quiz/:id" element={<EditQuiz />} />

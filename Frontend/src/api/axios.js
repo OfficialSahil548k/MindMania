@@ -44,3 +44,9 @@ export const submitContact = (contactData) => API.post("/api/contact", contactDa
 // User
 export const uploadProfileImage = (formData) => API.post("/api/user/profile-image", formData);
 export const fetchUserProfile = () => API.get("/api/user/profile");
+// Institute
+export const createInstitute = (newInstitute) => API.post("/api/institutes", newInstitute);
+export const fetchInstitutes = () => API.get("/api/institutes");
+export const fetchMyInstitutes = () => API.get("/api/institutes/my-institutes");
+export const updateInstitute = (id, updatedInstitute) => API.put(`/api/institutes/${id}`, updatedInstitute);
+export const deleteInstitute = (id) => API.delete(`/api/institutes/${id}`);

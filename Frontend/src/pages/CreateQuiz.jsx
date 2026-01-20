@@ -5,6 +5,7 @@ import {
   createQuiz,
   createQuestion,
   updateQuiz,
+  fetchInstitutes,
 } from "../api/axios";
 import Button from "../components/Button";
 import Input from "../components/Input";
@@ -37,25 +38,30 @@ const CreateQuiz = () => {
     timeLimit: 10,
     passingScore: 50,
     isLive: true,
+    passingScore: 50,
+    isLive: true,
     questions: [], // Array of IDs
+    institute: "", // Institute ID
   });
+  const [institutes, setInstitutes] = useState([]);
 
   useEffect(() => {
-    const loadQuestions = async () => {
+    const loadData = async () => {
       try {
         const { data } = await fetchQuestions();
         setAvailableQuestions(data);
 
-        // Restore quiz ID if coming back to edit (future enhancement)
-        // For now, simple creation flow
+        const { data: institutesData } = await fetchInstitutes();
+        setInstitutes(institutesData);
       } catch (error) {
-        console.error("Error loading questions", error);
+        console.error("Error loading data", error);
+        toast.error("Failed to load initial data.");
       } finally {
         setInitialLoading(false);
       }
     };
-    loadQuestions();
-  }, []);
+    loadData();
+  }, [toast]);
 
   const handleChange = (e) => {
     const value =
@@ -284,6 +290,27 @@ const CreateQuiz = () => {
                     required
                     placeholder="e.g. Web Development"
                   />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Institute (Optional)
+                    </label>
+                    <select
+                      name="institute"
+                      value={quizData.institute}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white"
+                    >
+                      <option value="">Select Institute (Default: None)</option>
+                      {institutes.map((inst) => (
+                        <option key={inst._id} value={inst._id}>
+                          {inst.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Input
                     label="Time Limit (Minutes)"
                     type="number"

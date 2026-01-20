@@ -39,12 +39,20 @@ const Navbar = () => {
             {user &&
               user?.result?.role !== "instructor" &&
               user?.result?.role !== "admin" && (
-                <Link
-                  to="/quizzes"
-                  className="text-gray-700 hover:text-primary transition-colors font-medium"
-                >
-                  Quizzes
-                </Link>
+                <>
+                  <Link
+                    to="/quizzes"
+                    className="text-gray-700 hover:text-primary transition-colors font-medium"
+                  >
+                    Quizzes
+                  </Link>
+                  <Link
+                    to="/institutes"
+                    className="text-gray-700 hover:text-primary transition-colors font-medium"
+                  >
+                    Institutes
+                  </Link>
+                </>
               )}
 
             {(user?.result?.role === "instructor" ||
@@ -54,6 +62,15 @@ const Navbar = () => {
                 className="text-gray-700 hover:text-primary transition-colors font-medium"
               >
                 Dashboard
+              </Link>
+            )}
+
+            {user?.result?.role === "admin" && (
+              <Link
+                to={`/${user?.result?._id}/institutes`}
+                className="text-gray-700 hover:text-primary transition-colors font-medium"
+              >
+                Institutes
               </Link>
             )}
             <Link
@@ -172,13 +189,22 @@ const Navbar = () => {
             {user &&
               user?.result?.role !== "instructor" &&
               user?.result?.role !== "admin" && (
-                <Link
-                  to="/quizzes"
-                  className="block px-3 py-2 text-gray-700 hover:text-primary font-medium w-full text-center hover:bg-gray-50 rounded-lg"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Quizzes
-                </Link>
+                <>
+                  <Link
+                    to="/quizzes"
+                    className="block px-3 py-2 text-gray-700 hover:text-primary font-medium w-full text-center hover:bg-gray-50 rounded-lg"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Quizzes
+                  </Link>
+                  <Link
+                    to="/institutes"
+                    className="block px-3 py-2 text-gray-700 hover:text-primary font-medium w-full text-center hover:bg-gray-50 rounded-lg"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Institutes
+                  </Link>
+                </>
               )}
 
             {(user?.result?.role === "instructor" ||
@@ -189,6 +215,15 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
               >
                 Dashboard
+              </Link>
+            )}
+            {user?.result?.role === "admin" && (
+              <Link
+                to={`/${user?.result?._id}/institutes`}
+                className="block px-3 py-2 text-gray-700 hover:text-primary font-medium w-full text-center hover:bg-gray-50 rounded-lg"
+                onClick={() => setIsOpen(false)}
+              >
+                Institutes
               </Link>
             )}
             <Link

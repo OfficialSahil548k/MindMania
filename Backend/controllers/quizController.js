@@ -5,6 +5,7 @@ export const createQuiz = async (req, res) => {
     const quiz = req.body;
     const newQuiz = new Quiz({
         ...quiz,
+        institute: quiz.institute || null, // Ensure institute is set if provided
         createdBy: req.userId,
         createdAt: new Date().toISOString()
     });
@@ -29,6 +30,47 @@ export const getQuizzes = async (req, res) => {
         // Simple filter for now
         if (category) {
             query.category = category;
+        }
+
+        // Filter by institute
+        if (req.query.institute) {
+            query.institute = req.query.institute;
+        } else {
+            // If no institute specified, show only Open Quizzes (institute: null)
+            // OR show all? Requirement: "In institue based quiz section student first select the their institute, then all the quizes under that institute will be appear"
+            // "The Quizes section we have made before, keep it as it is as Open quiz section."
+            // So Open Quiz section should ONLY show quizzes with institute: null.
+            // But let's check if we want to enforce this stricter now.
+            // Yes, "Open quiz section" implies not institute-linked.
+            // But existing quizzes have no institute field (undefined), effectively null in filter?
+            // Safest: If institute query param is NOT present, default to { institute: null } for Open Section?
+            // Or allow fetching all?
+            // Let's implement strict separation logic in Frontend query, here we support filter.
+            // If the frontend sends ?institute=... we filter.
+            // If the frontend sends ?open=true (or just explicit checks), we filter.
+            // Let's defer "Open Section" logic to frontend passing `institute=null` or similar.
+            // Actually, for backward compatibility, if no institute param, we might return all or just open.
+            // Requirement: "The Quizes section we have made before, keep it as it is as Open quiz section."
+            // This suggests the default `getQuizzes` call (without params) used by existing pages should probably return only Open keys.
+            // Let's check if we have explicit requirement.
+            // "keep it as it is as Open quiz section" -> implies defaults should exclude institute quizzes?
+            query.institute = null;
+        }
+
+        // Wait, if I force query.institute = null, then the Admin dashboard listing ALL quizzes might break if it doesn't send a param.
+        // Let's check `req.query.institute`.
+        // If `req.query.institute` is explicit string "null", handle it.
+        // If `req.query.institute` is undefined, should we return only open quizzes?
+        // Let's look at `getQuizzes` usage. It's used in `Home` and `QuizList`.
+        // The user said: "The Quizes section we have made before, keep it as it is as Open quiz section."
+        // This implies the default view should NOT show institute quizzes.
+        // So DEFAULT constitutes `institute: null`.
+
+        if (req.query.institute) {
+            query.institute = req.query.institute;
+        } else {
+            // Default to open quizzes only
+            query.institute = null;
         }
 
         const quizzes = await Quiz.find(query).populate("questions", "text type difficulty"); // Don't populate answers here

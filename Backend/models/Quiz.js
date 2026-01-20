@@ -12,6 +12,11 @@ const quizSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    institute: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Institute",
+        default: null,
+    },
     questions: [
         {
             type: mongoose.Schema.Types.ObjectId,

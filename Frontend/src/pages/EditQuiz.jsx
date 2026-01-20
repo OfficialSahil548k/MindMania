@@ -5,6 +5,7 @@ import {
   fetchQuiz,
   updateQuiz,
   createQuestion,
+  fetchInstitutes,
 } from "../api/axios";
 import Button from "../components/Button";
 import Input from "../components/Input";
@@ -37,7 +38,9 @@ const EditQuiz = () => {
     passingScore: 50,
     isLive: true,
     questions: [], // Array of IDs
+    institute: "", // Institute ID
   });
+  const [institutes, setInstitutes] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +48,7 @@ const EditQuiz = () => {
         const [quizRes, questionsRes] = await Promise.all([
           fetchQuiz(id),
           fetchQuestions(),
+          fetchInstitutes(),
         ]);
 
         const quiz = quizRes.data;
@@ -57,9 +61,11 @@ const EditQuiz = () => {
           passingScore: quiz.passingScore,
           isLive: quiz.isPublished || quiz.isLive, // Handle both flags
           questions: quiz.questions.map((q) => q._id || q), // Handle populated or unpopulated
+          institute: quiz.institute || "",
         });
 
         setAvailableQuestions(questionsRes.data);
+        setInstitutes(institutesRes.data);
       } catch (error) {
         console.error("Error loading data", error);
         toast.error("Failed to load quiz data.");
@@ -182,6 +188,24 @@ const EditQuiz = () => {
                   required
                   placeholder="e.g. Web Development"
                 />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Institute (Optional)
+                  </label>
+                  <select
+                    name="institute"
+                    value={quizData.institute}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white"
+                  >
+                    <option value="">Select Institute (Default: None)</option>
+                    {institutes.map((inst) => (
+                      <option key={inst._id} value={inst._id}>
+                        {inst.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <Input
                   label="Time Limit (Minutes)"
                   type="number"
@@ -379,7 +403,7 @@ const EditQuiz = () => {
                             <option key={idx} value={opt}>
                               {opt}
                             </option>
-                          )
+                          ),
                       )}
                     </select>
                   ) : (

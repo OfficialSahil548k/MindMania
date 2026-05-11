@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 
+const TOKEN_EXPIRES_IN = "7d";
+
 export const register = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
@@ -26,7 +28,7 @@ export const register = async (req, res) => {
         const token = jwt.sign(
             { userId: user._id, role: user.role },
             process.env.JWT_SECRET || "supersecretkey",
-            { expiresIn: "1h" }
+            { expiresIn: TOKEN_EXPIRES_IN }
         );
 
         req.session.user = {
@@ -65,7 +67,7 @@ export const login = async (req, res) => {
         const token = jwt.sign(
             { userId: existingUser._id, role: existingUser.role },
             process.env.JWT_SECRET || "supersecretkey",
-            { expiresIn: "1h" }
+            { expiresIn: TOKEN_EXPIRES_IN }
         );
 
         req.session.user = {
@@ -123,7 +125,7 @@ export const googleLogin = async (req, res) => {
         const jwtToken = jwt.sign(
             { userId: user._id, role: user.role },
             process.env.JWT_SECRET || "supersecretkey",
-            { expiresIn: "1h" }
+            { expiresIn: TOKEN_EXPIRES_IN }
         );
 
         req.session.user = {

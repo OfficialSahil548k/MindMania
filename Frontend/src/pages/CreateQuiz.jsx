@@ -38,8 +38,6 @@ const CreateQuiz = () => {
     timeLimit: 10,
     passingScore: 50,
     isLive: true,
-    passingScore: 50,
-    isLive: true,
     questions: [], // Array of IDs
     institute: "", // Institute ID
   });

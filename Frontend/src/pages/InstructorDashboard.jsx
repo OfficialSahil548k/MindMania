@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   fetchQuizzes,
   fetchQuestions,
@@ -17,6 +17,7 @@ import ConfirmationModal from "../components/ConfirmationModal";
 const InstructorDashboard = () => {
   /* ... existing state */
   const { userId } = useParams();
+  const navigate = useNavigate();
   const [quizzes, setQuizzes] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,14 +45,58 @@ const InstructorDashboard = () => {
   const loadData = async () => {
     /* ... same loadData logic ... */
     setLoading(true);
+    const getErrorMessage = (error) =>
+      error?.response?.data?.message || error?.message || "Request failed";
+
     try {
-      const quizzesRes = await fetchQuizzes({ owner: true });
-      const questionsRes = await fetchQuestions();
-      setQuizzes(quizzesRes.data);
-      setQuestions(questionsRes.data);
+      const [quizzesResult, questionsResult] = await Promise.allSettled([
+        fetchQuizzes({ owner: true }),
+        fetchQuestions(),
+      ]);
+
+      if (quizzesResult.status === "fulfilled") {
+        setQuizzes(quizzesResult.value.data);
+      }
+
+      if (questionsResult.status === "fulfilled") {
+        setQuestions(questionsResult.value.data);
+      }
+
+      const failedRequests = [
+        quizzesResult.status === "rejected" && {
+          label: "quizzes",
+          error: quizzesResult.reason,
+        },
+        questionsResult.status === "rejected" && {
+          label: "questions",
+          error: questionsResult.reason,
+        },
+      ].filter(Boolean);
+
+      const authFailure = failedRequests.find(
+        ({ error }) => error?.response?.status === 401,
+      );
+
+      if (authFailure) {
+        localStorage.removeItem("profile");
+        toast.error(getErrorMessage(authFailure.error));
+        navigate("/login");
+        return;
+      }
+
+      if (failedRequests.length > 0) {
+        toast.error(
+          `Failed to load ${failedRequests
+            .map(({ label }) => label)
+            .join(" and ")}.`,
+        );
+        failedRequests.forEach(({ label, error }) => {
+          console.error(`Error loading dashboard ${label}:`, error);
+        });
+      }
     } catch (error) {
       console.error("Error loading dashboard data:", error);
-      toast.error("Failed to load dashboard data");
+      toast.error(getErrorMessage(error));
     } finally {
       setLoading(false);
     }

@@ -21,7 +21,7 @@ const Contact = () => {
                   </div>
                   <div className="mt-1">
                     <dt className="sr-only">Phone</dt>
-                    <dd>+1 (555) 123-4567</dd>
+                    <dd>+91 8360966242</dd>
                   </div>
                 </dl>
               </div>
@@ -36,7 +36,7 @@ const Contact = () => {
                   </div>
                   <div className="mt-1">
                     <dt className="sr-only">Phone</dt>
-                    <dd>+1 (555) 987-6543</dd>
+                    <dd>+91 8360966242</dd>
                   </div>
                 </dl>
               </div>

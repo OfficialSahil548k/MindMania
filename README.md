@@ -42,8 +42,6 @@ MindMania is an online platform for building and taking timed quizzes and exams.
 
 Visit the app live at: https://mindmania.onrender.com
 
-(If you want screenshots added to this README, provide them and I will add them.)
-
 ---
 
 ## Repository structure
@@ -57,8 +55,6 @@ Note: each subdirectory may contain local README and setup instructions specific
 ---
 
 ## Tech stack
-
-(Adjust these to match your project if different)
 - Backend: Node.js + Express (or your backend framework)
 - Database: MongoDB Atlas
 - Frontend: React
